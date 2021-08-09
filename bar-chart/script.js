@@ -7,17 +7,12 @@
 // 	.attr('class', 'bar')
 // 	.style('margin', '2px');
 
-const dataSet = [
-	['1947-01-01', 100],
-	['1947-03-01', 200],
-	['1947-05-01', 300],
-	['1947-07-01', 400],
-];
+const tooltip = d3.select('body').append('div').attr('id', 'tooltip').style('opacity', 0);
 
 const w = 500;
-const h = 400;
+const h = 200;
 
-const padding = 100;
+const padding = 22;
 
 const svg = d3
 	.select('body')
@@ -25,6 +20,13 @@ const svg = d3
 	.attr('height', h)
 	.attr('width', w)
 	.style('background-color', 'red');
+
+const dataSet = [
+	['1947-01-01', 100],
+	['1947-03-01', 200],
+	['1947-05-01', 300],
+	['1947-07-01', 400],
+];
 
 const xScale = d3
 	// .scaleLinear()
@@ -53,12 +55,30 @@ svg
 	.data(dataSet)
 	.enter()
 	.append('rect')
-	.attr('x', (d, i) => xScale(new Date(d[0])))
-	.attr('y', (d, i) => yScale(d[1]))
+	.attr('x', d => xScale(new Date(d[0])))
+	.attr('y', d => console.log(d[1], yScale(d[1])) || yScale(d[1]))
+	.attr('data-date', d => d[0])
+	.attr('data-gdp', d => d[1])
 	.attr('width', 15)
-	.attr('height', (d, i) => h - yScale(d[1]) - padding);
+	.attr('height', d => h - yScale(d[1]) - padding)
+	.attr('class', 'bar')
+	// .on('mouseover', (d, i) => console.log(d, i));
+	.on('mouseover', (d, i) => {
+		console.log(d, i);
+		tooltip.transition().duration(200).style('opacity', 0.9);
+		tooltip
+			.html(i[0] + '<br/>' + i[1])
+			.attr('data-date', i[0])
+			.style('left', d.pageX + 'px')
+			.style('top', h - padding + 'px');
+		// .style('top', d.pageY - 28 + 'px');
+	})
+	.on('mouseout', d => {
+		tooltip.transition().duration(500).style('opacity', 0);
+	});
 
-const xAxis = d3.axisBottom(xScale);
+const xAxis = d3.axisBottom(xScale).ticks();
+
 svg
 	.append('g')
 	.attr('transform', `translate(0, ${h - padding})`)
@@ -67,6 +87,7 @@ svg
 // .call(xAxis.ticks(d3.timeMonth));
 
 const yAxis = d3.axisLeft(yScale);
+yAxis.ticks(2);
 
 svg
 	.append('g')
